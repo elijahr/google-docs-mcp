@@ -28,7 +28,7 @@ export function register(server: FastMCP) {
           includeTabsContent: true,
           // Only get essential fields for tab listing
           fields: args.includeContent
-            ? 'title,tabs' // Get all tab data if we need content summary
+            ? 'title,tabs(tabProperties,childTabs,documentTab(body(content(paragraph(elements(startIndex,endIndex,textRun(content))),table,sectionBreak,startIndex,endIndex))))' // Need content for character count
             : 'title,tabs(tabProperties,childTabs)', // Otherwise just structure
         });
 
