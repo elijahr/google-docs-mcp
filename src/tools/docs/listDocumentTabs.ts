@@ -23,13 +23,19 @@ export function register(server: FastMCP) {
 
       try {
         // Get document with tabs structure
+        // The API rejects bare `childTabs` in the field mask — it treats unspecified
+        // child fields as a request for all subfields (including comment-related
+        // ones) and errors out: "Field mask cannot retrieve comment-specific fields
+        // when include_comments is false." Always specify childTabs subfields.
+        // Recurse 3 levels deep, which covers any realistic tab nesting.
+        const childTabsRecursive =
+          'childTabs(tabProperties,childTabs(tabProperties,childTabs(tabProperties)))';
         const res = await docs.documents.get({
           documentId: args.documentId,
-          includeTabsContent: true,
-          // Only get essential fields for tab listing
+          includeTabsContent: args.includeContent,
           fields: args.includeContent
-            ? 'title,tabs(tabProperties,childTabs,documentTab(body(content(paragraph(elements(startIndex,endIndex,textRun(content))),table,sectionBreak,startIndex,endIndex))))' // Need content for character count
-            : 'title,tabs(tabProperties,childTabs)', // Otherwise just structure
+            ? `title,tabs(tabProperties,${childTabsRecursive},documentTab(body(content(paragraph(elements(startIndex,endIndex,textRun(content))),table,sectionBreak,startIndex,endIndex))))`
+            : `title,tabs(tabProperties,${childTabsRecursive})`,
         });
 
         const docTitle = res.data.title || 'Untitled Document';
